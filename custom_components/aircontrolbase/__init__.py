@@ -35,11 +35,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     log_coordinator = AirControlBaseLogCoordinator(hass, client)
-    # Não bloquear o setup se o log endpoint falhar — só logar
+    # Não bloquear o setup se o log endpoint falhar — só logar com detalhe
     try:
         await log_coordinator.async_config_entry_first_refresh()
-    except Exception:  # noqa: BLE001
-        _LOGGER.warning("Falha no primeiro refresh do log_coordinator — seguindo sem")
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.warning(
+            "Falha no primeiro refresh do log_coordinator (%s: %s) — seguindo sem",
+            type(err).__name__,
+            err,
+        )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "client": client,

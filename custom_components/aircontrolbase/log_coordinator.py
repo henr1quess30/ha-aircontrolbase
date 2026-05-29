@@ -88,11 +88,19 @@ class AirControlBaseLogCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.client = client
 
     async def _async_update_data(self) -> dict[str, Any]:
+        ops_raw: Any = {}
+        err_raw: Any = {}
         try:
             ops_raw = await self.client.get_device_log(log_type="r", page=1, page_size=LOG_PAGE_SIZE)
+        except AirControlBaseError as err:
+            _LOGGER.warning("deviceLog type=r falhou: %s", err)
+        try:
             err_raw = await self.client.get_device_log(log_type="m", page=1, page_size=LOG_PAGE_SIZE)
         except AirControlBaseError as err:
-            raise UpdateFailed(f"Log API: {err}") from err
+            _LOGGER.warning("deviceLog type=m falhou: %s", err)
+
+        if not ops_raw and not err_raw:
+            raise UpdateFailed("Ambos os endpoints de deviceLog falharam")
 
         _LOGGER.debug("deviceLog type=r raw: %s", ops_raw)
         _LOGGER.debug("deviceLog type=m raw: %s", err_raw)

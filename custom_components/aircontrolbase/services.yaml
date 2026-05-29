@@ -30,7 +30,7 @@ create_schedule:
             - auto
             - dry
             - fan_only
-            - off
+            - "off"
     temperature:
       name: Temperatura
       description: Temperatura alvo em °C.
@@ -108,7 +108,7 @@ update_schedule:
       default: cool
       selector:
         select:
-          options: [cool, heat, auto, dry, fan_only, off]
+          options: ["cool", "heat", "auto", "dry", "fan_only", "off"]
     temperature:
       name: Temperatura
       required: false
@@ -125,7 +125,7 @@ update_schedule:
       default: auto
       selector:
         select:
-          options: [low, mid, high, auto]
+          options: ["low", "mid", "high", "auto"]
     weeks:
       name: Dias da semana
       required: false
