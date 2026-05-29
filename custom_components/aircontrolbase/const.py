@@ -7,19 +7,12 @@ DOMAIN = "aircontrolbase"
 
 # Base e endpoints do AirControlBase
 BASE_URL = "https://www.aircontrolbase.com"
-EP_LOGIN          = "/web/user/login"
-EP_GET_DETAILS    = "/web/userGroup/getDetails"
-EP_CONTROL        = "/web/device/control"
-EP_CONTROL_LOG    = "/web/record/controlLog"
-EP_DEVICE_LOG     = "/web/record/deviceLog"
-EP_LOGIN_LOG      = "/web/record/login"
-EP_SCHEDULE_ALL   = "/web/schedule/getAll"
-EP_SCHEDULE_UPDATE = "/web/schedule/update"
+EP_LOGIN       = "/web/user/login"
+EP_GET_DETAILS = "/web/userGroup/getDetails"
+EP_CONTROL     = "/web/device/control"
 
 # Polling
 DEFAULT_POLL_INTERVAL = timedelta(seconds=20)
-LOG_POLL_INTERVAL     = timedelta(minutes=5)
-LOG_PAGE_SIZE         = 50  # quantos eventos pegar por chamada
 
 # Códigos de erro do AirControlBase
 CODE_SESSION_EXPIRED = 40018
@@ -51,10 +44,3 @@ TEMP_STEP = 1
 CONF_ACCOUNT  = "account"
 CONF_PASSWORD = "password"
 CONF_USER_ID  = "user_id"
-
-# Storage de coordinators no hass.data
-DATA_COORDINATOR = "coordinator"
-DATA_API         = "api"
-
-# Dias da semana para schedule (segue ISO: 1=segunda ... 7=domingo)
-WEEK_DAYS = [1, 2, 3, 4, 5, 6, 7]

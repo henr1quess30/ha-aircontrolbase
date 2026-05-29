@@ -49,10 +49,7 @@
       "acs_stop": { "name": "ACs off" },
       "acs_lock": { "name": "ACs locked" },
       "acs_error":{ "name": "ACs with error" },
-      "acs_total":{ "name": "Total ACs" },
-      "recent_errors": { "name": "Recent error events" },
-      "recent_ops":    { "name": "Recent operation events" },
-      "last_event":    { "name": "Last event" }
+      "acs_total":{ "name": "Total ACs" }
     },
     "switch": {
       "lock_remote": { "name": "Lock IR remote" },
@@ -63,43 +60,6 @@
     }
   },
   "services": {
-    "create_schedule": {
-      "name": "Create schedule",
-      "description": "Creates a booking/schedule on AirControlBase for one or more ACs.",
-      "fields": {
-        "device_ids":  { "name": "Devices",      "description": "AC IDs." },
-        "timer":       { "name": "Time",         "description": "HH:MM (24h)." },
-        "mode":        { "name": "Mode",         "description": "AC mode." },
-        "temperature": { "name": "Temperature",  "description": "Target temperature (°C)." },
-        "fan_mode":    { "name": "Fan",          "description": "Fan speed." },
-        "weeks":       { "name": "Weekdays",     "description": "1=Mon ... 7=Sun. Empty = all days." },
-        "cycle":       { "name": "Recurring",    "description": "Repeats weekly." }
-      }
-    },
-    "update_schedule": {
-      "name": "Update schedule",
-      "description": "Updates an existing schedule (requires sid).",
-      "fields": {
-        "schedule_id": { "name": "Schedule ID",  "description": "Existing schedule sid." },
-        "device_ids":  { "name": "Devices",      "description": "AC IDs." },
-        "timer":       { "name": "Time",         "description": "HH:MM." },
-        "mode":        { "name": "Mode",         "description": "AC mode." },
-        "temperature": { "name": "Temperature",  "description": "Target temperature (°C)." },
-        "fan_mode":    { "name": "Fan",          "description": "Fan speed." },
-        "weeks":       { "name": "Weekdays",     "description": "1=Mon ... 7=Sun." },
-        "cycle":       { "name": "Recurring",    "description": "Repeats weekly." }
-      }
-    },
-    "refresh":      { "name": "Refresh",      "description": "Force an immediate state poll." },
-    "refresh_logs": { "name": "Refresh logs", "description": "Force an immediate log poll." },
-    "get_control_log": {
-      "name": "Get control log",
-      "description": "Returns the control log (controlLog) for a specific device.",
-      "fields": {
-        "device_id": { "name": "Device ID",      "description": "AC ID." },
-        "page":      { "name": "Page",           "description": "Page number." },
-        "page_size": { "name": "Page size",      "description": "Records per page." }
-      }
-    }
+    "refresh": { "name": "Refresh", "description": "Force an immediate state poll." }
   }
 }

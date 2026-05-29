@@ -1,17 +1,18 @@
 # AirControlBase (CCM21) — Home Assistant Custom Integration
 
-Integração nativa para o **AirControlBase / CCM21** (gateway centralizado de ar-condicionado da Hitachi/HiSense). Substitui o fluxo Node-RED + MQTT Discovery por uma integração de primeira classe no Home Assistant, com config flow via UI, descoberta automática de devices, locks por AC e agendamento.
+Integração nativa para o **AirControlBase / CCM21** (gateway centralizado de ar-condicionado). Substitui Node-RED + MQTT por uma integração de primeira classe com descoberta automática de ACs, controle de clima e bloqueios.
+
+> Logbook, histórico e agendamento são feitos pelas próprias funcionalidades nativas do Home Assistant (Logbook, History, Automations, Scripts) — esta integração foca em expor os ACs como entidades reais.
 
 ## Recursos
 
-- **Climate** por AC — on/off, modos (cool, heat, auto, dry, fan_only), velocidade do vento (low/mid/high/auto, com tradução de "mid"→"Médio"), temperatura alvo (17–30 °C), temperatura atual.
+- **Climate** por AC — on/off, modos (cool, heat, auto, dry, fan_only), velocidade do vento (low/mid/high/auto), temperatura alvo (17–30 °C), temperatura atual.
 - **Sensores de resumo** — ACs em cada modo (cool/heat/fan/stop/lock/error), total.
-- **Sensores de histórico** — Último evento por AC, eventos de operação e erros recentes (poll 5 min).
 - **Switches de lock** por AC — bloquear controle remoto, modo, modo cool, modo heat, ventilação.
-- **Serviços** — `create_schedule`, `update_schedule`, `refresh`, `refresh_logs`, `get_control_log` (com response).
+- **Serviço** `aircontrolbase.refresh` — força poll imediato.
 - **Auto re-login** — detecta `code: 40018` e refaz sessão automaticamente.
-- **Polling** — 20 s (estado) e 5 min (logs).
-- **i18n** — interface e nomes de entidades em pt-BR e en.
+- **Polling** — 20 s.
+- **i18n** — interface em pt-BR e en, com fan modes localizados ("mid" → "Médio" / "Medium").
 
 ## Instalação
 
@@ -20,13 +21,13 @@ Integração nativa para o **AirControlBase / CCM21** (gateway centralizado de a
 1. HACS → Integrações → menu (⋮) → **Custom repositories**
 2. URL: `https://github.com/henr1quess30/ha-aircontrolbase`
 3. Category: **Integration** → Add
-4. Instale "AirControlBase (CCM21)"
+4. Procure "AirControlBase (CCM21)" e clique **Download**
 5. Reinicie o Home Assistant
 6. Configurações → Dispositivos e Serviços → **Adicionar Integração** → "AirControlBase"
 
 ### Manual
 
-1. Copie `custom_components/aircontrolbase/` para `<config>/custom_components/aircontrolbase/` no HA.
+1. Copie `custom_components/aircontrolbase/` para `<config>/custom_components/aircontrolbase/`.
 2. Reinicie o Home Assistant.
 3. Settings → Devices & Services → Add Integration → "AirControlBase".
 
@@ -50,74 +51,47 @@ Para cada AC:
 - `climate.<nome_do_ac>`
 - `switch.<nome_do_ac>_bloquear_controle_remoto`
 - `switch.<nome_do_ac>_bloquear_modo`
-- `switch.<nome_do_ac>_bloquear_modo_cool`
-- `switch.<nome_do_ac>_bloquear_modo_heat`
+- `switch.<nome_do_ac>_bloquear_modo_resfriar`
+- `switch.<nome_do_ac>_bloquear_modo_aquecer`
 - `switch.<nome_do_ac>_bloquear_ventilação`
 
 Para o hub (1 vez):
-- `sensor.acs_em_modo_cool`
-- `sensor.acs_em_modo_heat`
-- `sensor.acs_em_modo_fan`
+- `sensor.acs_resfriando`
+- `sensor.acs_aquecendo`
+- `sensor.acs_em_ventilação`
 - `sensor.acs_desligados`
-- `sensor.acs_travados`
+- `sensor.acs_bloqueados`
 - `sensor.acs_com_erro`
 - `sensor.total_de_acs`
 
-## Serviços
+## Por que não tem histórico e agendamento?
 
-### `aircontrolbase.create_schedule`
+O Home Assistant já oferece:
 
-```yaml
-service: aircontrolbase.create_schedule
-data:
-  device_ids: ["40783271", "40783272"]
-  timer: "08:00"
-  mode: cool
-  temperature: 22
-  fan_mode: auto
-  weeks: [1, 2, 3, 4, 5]   # seg–sex
-  cycle: true
-```
+- **Logbook** + **History** — registra automaticamente todo comando e mudança de estado das entidades climate/switch.
+- **Automations** e **Scripts** — substituem completamente o agendamento do AirControlBase, com mais flexibilidade (condições, gatilhos, integração com calendário, presença, etc.).
 
-### `aircontrolbase.update_schedule`
-
-Igual ao acima, mas exigindo `schedule_id` (sid) — obtido do endpoint interno `schedule/getAll`.
-
-### `aircontrolbase.refresh`
-
-Força um poll imediato.
-
-## Limitações conhecidas
-
-- Apenas ACs gerenciados pelo CCM21 são detectados (a API só lista esses).
-- Deleção de agendamento ainda não suportada — endpoint não mapeado.
-- Histórico (`controlLog`, `deviceLog`, `loginLog`) está implementado no cliente mas ainda não exposto como entidade no HA. Próxima versão.
+Manter essas features na integração seria duplicar o que o HA já faz melhor.
 
 ## Desenvolvimento
 
-Estrutura:
-
 ```
 custom_components/aircontrolbase/
-├── __init__.py        # setup/unload + registro de serviços
+├── __init__.py        # setup/unload + registro do serviço refresh
 ├── api.py             # cliente HTTP async (aiohttp)
 ├── config_flow.py     # UI de login
 ├── const.py           # constantes e endpoints
-├── coordinator.py     # DataUpdateCoordinator
+├── coordinator.py     # DataUpdateCoordinator (poll 20s)
 ├── climate.py         # entidades climate por AC
-├── sensor.py          # sensores de resumo
-├── switch.py          # switches de lock
-├── services.py        # handlers de serviços
-├── services.yaml      # schema dos serviços
+├── sensor.py          # 7 sensores de resumo
+├── switch.py          # 5 switches de lock por AC
+├── services.py        # handler do refresh
+├── services.yaml      # schema do serviço
 ├── manifest.json
 └── translations/
     ├── en.json
     └── pt-BR.json
 ```
-
-## Créditos
-
-Engenharia reversa baseada em flow original Node-RED + capturas de DevTools.
 
 ## Licença
 

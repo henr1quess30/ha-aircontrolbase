@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant
 from .api import AirControlBaseClient, AirControlBaseError
 from .const import CONF_ACCOUNT, CONF_PASSWORD, CONF_USER_ID, DOMAIN
 from .coordinator import AirControlBaseCoordinator
-from .log_coordinator import AirControlBaseLogCoordinator
 from .services import async_register_services, async_unregister_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,21 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = AirControlBaseCoordinator(hass, client)
     await coordinator.async_config_entry_first_refresh()
 
-    log_coordinator = AirControlBaseLogCoordinator(hass, client)
-    # Não bloquear o setup se o log endpoint falhar — só logar com detalhe
-    try:
-        await log_coordinator.async_config_entry_first_refresh()
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.warning(
-            "Falha no primeiro refresh do log_coordinator (%s: %s) — seguindo sem",
-            type(err).__name__,
-            err,
-        )
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "client": client,
         "coordinator": coordinator,
-        "log_coordinator": log_coordinator,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

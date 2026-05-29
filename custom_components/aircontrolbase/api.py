@@ -13,13 +13,8 @@ from .const import (
     CODE_SESSION_EXPIRED,
     DEFAULT_TIMEOUT,
     EP_CONTROL,
-    EP_CONTROL_LOG,
-    EP_DEVICE_LOG,
     EP_GET_DETAILS,
     EP_LOGIN,
-    EP_LOGIN_LOG,
-    EP_SCHEDULE_ALL,
-    EP_SCHEDULE_UPDATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -214,87 +209,3 @@ class AirControlBaseClient:
             "type": "control",
         }
         return await self._post(EP_CONTROL, data)
-
-    async def get_control_log(self, device_id: int | str, page: int = 1, page_size: int = 10) -> dict[str, Any]:
-        return await self._post(
-            EP_CONTROL_LOG,
-            {
-                "pageSize": str(page_size),
-                "pageNumber": str(page),
-                "userId": self._user_id or "",
-                "did": str(device_id),
-            },
-            referer=f"{BASE_URL}/deviceControlRecord.html",
-        )
-
-    async def get_device_log(self, log_type: str = "r", page: int = 1, page_size: int = 10) -> dict[str, Any]:
-        """log_type: 'r' = operação remota, 'm' = manutenção/erro."""
-        return await self._post(
-            EP_DEVICE_LOG,
-            {
-                "pageSize": str(page_size),
-                "pageNumber": str(page),
-                "userId": self._user_id or "",
-                "type": log_type,
-            },
-            referer=f"{BASE_URL}/deviceLogRecord.html",
-        )
-
-    async def get_login_log(self, log_type: str = "web", page: int = 1, page_size: int = 10) -> dict[str, Any]:
-        """log_type: 'web' ou 'app'."""
-        return await self._post(
-            EP_LOGIN_LOG,
-            {
-                "pageSize": str(page_size),
-                "pageNumber": str(page),
-                "userId": self._user_id or "",
-                "logType": log_type,
-            },
-            referer=f"{BASE_URL}/logRecord.html",
-        )
-
-    async def get_schedules(self) -> dict[str, Any]:
-        return await self._post(
-            EP_SCHEDULE_ALL,
-            {"userId": self._user_id or ""},
-            referer=f"{BASE_URL}/bookingControl.html",
-        )
-
-    async def update_schedule(
-        self,
-        *,
-        schedule_id: str | int | None,
-        control: dict[str, Any],
-        timer: str,
-        weeks: list[int],
-        objs: list[dict[str, Any]],
-        cycle: bool = True,
-        power: str = "y",
-    ) -> dict[str, Any]:
-        """Cria (sid vazio) ou atualiza (sid existente) um agendamento.
-
-        Args:
-            schedule_id: sid do agendamento (None/vazio para criar novo).
-            control: dict tipo {"mode":"dry","temp":"25","wind":"low","power":"y"}.
-            timer: "HH:MM".
-            weeks: lista de dias (1=segunda ... 7=domingo).
-            objs: lista de áreas, cada uma {"aname","aid","devices":[{"deviceName","deviceId"}]}.
-            cycle: se repete.
-            power: "y" ou "n".
-        """
-        data = {
-            "control": json.dumps(control, separators=(",", ":")),
-            "cycle": "y" if cycle else "n",
-            "timer": timer,
-            "weeks": json.dumps(weeks, separators=(",", ":")),
-            "userId": self._user_id or "",
-            "objs": json.dumps(objs, separators=(",", ":")),
-            "power": power,
-        }
-        if schedule_id is not None and str(schedule_id) != "":
-            data["sid"] = str(schedule_id)
-        return await self._post(
-            EP_SCHEDULE_UPDATE,
-            data,
-            referer=f"{BASE_URL}/bookingControl.html",
-        )
