@@ -25,5 +25,81 @@
     "abort": {
       "already_configured": "Esta conta já está configurada."
     }
+  },
+  "entity": {
+    "climate": {
+      "ac": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "off": "Desligado",
+              "low": "Baixo",
+              "mid": "Médio",
+              "high": "Alto",
+              "auto": "Automático"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "acs_cool": { "name": "ACs resfriando" },
+      "acs_heat": { "name": "ACs aquecendo" },
+      "acs_fan":  { "name": "ACs em ventilação" },
+      "acs_stop": { "name": "ACs desligados" },
+      "acs_lock": { "name": "ACs bloqueados" },
+      "acs_error":{ "name": "ACs com erro" },
+      "acs_total":{ "name": "Total de ACs" },
+      "recent_errors": { "name": "Eventos de erro recentes" },
+      "recent_ops":    { "name": "Eventos de operação recentes" },
+      "last_event":    { "name": "Último evento" }
+    },
+    "switch": {
+      "lock_remote": { "name": "Bloquear controle remoto" },
+      "lock_mode":   { "name": "Bloquear modo" },
+      "lock_cool":   { "name": "Bloquear modo resfriar" },
+      "lock_heat":   { "name": "Bloquear modo aquecer" },
+      "lock_wind":   { "name": "Bloquear ventilação" }
+    }
+  },
+  "services": {
+    "create_schedule": {
+      "name": "Criar agendamento",
+      "description": "Cria um agendamento (booking) no AirControlBase para um ou mais ACs.",
+      "fields": {
+        "device_ids":  { "name": "Devices",        "description": "IDs dos ar-condicionados." },
+        "timer":       { "name": "Horário",        "description": "HH:MM (24h)." },
+        "mode":        { "name": "Modo",           "description": "Modo do AC." },
+        "temperature": { "name": "Temperatura",    "description": "Temperatura alvo (°C)." },
+        "fan_mode":    { "name": "Ventilação",     "description": "Velocidade do ventilador." },
+        "weeks":       { "name": "Dias da semana", "description": "1=seg ... 7=dom. Vazio = todos." },
+        "cycle":       { "name": "Cíclico",        "description": "Repete semanalmente." }
+      }
+    },
+    "update_schedule": {
+      "name": "Atualizar agendamento",
+      "description": "Atualiza um agendamento existente (precisa do sid).",
+      "fields": {
+        "schedule_id": { "name": "Schedule ID",    "description": "sid existente." },
+        "device_ids":  { "name": "Devices",        "description": "IDs dos ACs." },
+        "timer":       { "name": "Horário",        "description": "HH:MM." },
+        "mode":        { "name": "Modo",           "description": "Modo do AC." },
+        "temperature": { "name": "Temperatura",    "description": "Temperatura alvo (°C)." },
+        "fan_mode":    { "name": "Ventilação",     "description": "Velocidade do ventilador." },
+        "weeks":       { "name": "Dias da semana", "description": "1=seg ... 7=dom." },
+        "cycle":       { "name": "Cíclico",        "description": "Repete semanalmente." }
+      }
+    },
+    "refresh":      { "name": "Atualizar",      "description": "Força um poll imediato do estado dos ACs." },
+    "refresh_logs": { "name": "Atualizar logs", "description": "Força um poll imediato dos logs." },
+    "get_control_log": {
+      "name": "Obter log de comandos",
+      "description": "Retorna o log de comandos (controlLog) de um device específico.",
+      "fields": {
+        "device_id": { "name": "Device ID",   "description": "ID do AC." },
+        "page":      { "name": "Página",      "description": "Número da página." },
+        "page_size": { "name": "Tamanho",     "description": "Registros por página." }
+      }
+    }
   }
 }

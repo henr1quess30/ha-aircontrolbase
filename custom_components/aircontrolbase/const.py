@@ -19,6 +19,7 @@ EP_SCHEDULE_UPDATE = "/web/schedule/update"
 # Polling
 DEFAULT_POLL_INTERVAL = timedelta(seconds=20)
 LOG_POLL_INTERVAL     = timedelta(minutes=5)
+LOG_PAGE_SIZE         = 50  # quantos eventos pegar por chamada
 
 # Códigos de erro do AirControlBase
 CODE_SESSION_EXPIRED = 40018

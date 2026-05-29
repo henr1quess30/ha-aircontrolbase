@@ -5,18 +5,21 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv
 
 from .api import AirControlBaseClient
-from .const import DOMAIN, HA_TO_ACB_MODE
+from .const import DOMAIN, HA_TO_ACB_MODE, LOG_PAGE_SIZE
 from .coordinator import AirControlBaseCoordinator
+from .log_coordinator import AirControlBaseLogCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_CREATE_SCHEDULE = "create_schedule"
 SERVICE_UPDATE_SCHEDULE = "update_schedule"
 SERVICE_REFRESH = "refresh"
+SERVICE_GET_CONTROL_LOG = "get_control_log"
+SERVICE_REFRESH_LOGS = "refresh_logs"
 
 _BASE_SCHEDULE_SCHEMA = {
     vol.Required("device_ids"): vol.All(cv.ensure_list, [cv.string]),
@@ -33,6 +36,14 @@ _BASE_SCHEDULE_SCHEMA = {
 CREATE_SCHEDULE_SCHEMA = vol.Schema(_BASE_SCHEDULE_SCHEMA)
 UPDATE_SCHEDULE_SCHEMA = vol.Schema(
     {vol.Required("schedule_id"): cv.string, **_BASE_SCHEDULE_SCHEMA}
+)
+
+GET_CONTROL_LOG_SCHEMA = vol.Schema(
+    {
+        vol.Required("device_id"): cv.string,
+        vol.Optional("page", default=1): vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional("page_size", default=LOG_PAGE_SIZE): vol.All(vol.Coerce(int), vol.Range(min=1, max=200)),
+    }
 )
 
 
@@ -133,6 +144,29 @@ def async_register_services(hass: HomeAssistant) -> None:
             coord: AirControlBaseCoordinator = b["coordinator"]
             await coord.async_request_refresh()
 
+    async def _handle_refresh_logs(call: ServiceCall) -> None:
+        for b in _all_buckets(hass):
+            log_coord: AirControlBaseLogCoordinator | None = b.get("log_coordinator")
+            if log_coord:
+                await log_coord.async_request_refresh()
+
+    async def _handle_get_control_log(call: ServiceCall) -> ServiceResponse:
+        device_id = str(call.data["device_id"])
+        bucket = _pick_bucket(hass, [device_id])
+        if not bucket:
+            return {"records": [], "error": "no_integration"}
+        client: AirControlBaseClient = bucket["client"]
+        try:
+            raw = await client.get_control_log(
+                device_id=device_id,
+                page=call.data["page"],
+                page_size=call.data["page_size"],
+            )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.exception("get_control_log falhou: %s", err)
+            return {"records": [], "error": str(err)}
+        return {"raw": raw}
+
     hass.services.async_register(
         DOMAIN, SERVICE_CREATE_SCHEDULE, _handle_create, schema=CREATE_SCHEDULE_SCHEMA
     )
@@ -140,12 +174,26 @@ def async_register_services(hass: HomeAssistant) -> None:
         DOMAIN, SERVICE_UPDATE_SCHEDULE, _handle_update, schema=UPDATE_SCHEDULE_SCHEMA
     )
     hass.services.async_register(DOMAIN, SERVICE_REFRESH, _handle_refresh)
+    hass.services.async_register(DOMAIN, SERVICE_REFRESH_LOGS, _handle_refresh_logs)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_CONTROL_LOG,
+        _handle_get_control_log,
+        schema=GET_CONTROL_LOG_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
 
 
 @callback
 def async_unregister_services(hass: HomeAssistant) -> None:
     if (hass.data.get(DOMAIN) or {}):
         return  # ainda tem instâncias
-    for svc in (SERVICE_CREATE_SCHEDULE, SERVICE_UPDATE_SCHEDULE, SERVICE_REFRESH):
+    for svc in (
+        SERVICE_CREATE_SCHEDULE,
+        SERVICE_UPDATE_SCHEDULE,
+        SERVICE_REFRESH,
+        SERVICE_REFRESH_LOGS,
+        SERVICE_GET_CONTROL_LOG,
+    ):
         if hass.services.has_service(DOMAIN, svc):
             hass.services.async_remove(DOMAIN, svc)

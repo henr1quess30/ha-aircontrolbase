@@ -71,6 +71,7 @@ class AirControlBaseClimate(CoordinatorEntity[AirControlBaseCoordinator], Climat
 
     _attr_has_entity_name = True
     _attr_name = None  # usa o nome do device
+    _attr_translation_key = "ac"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = HVAC_MODES
     _attr_fan_modes = HA_FAN_MODES

@@ -4,12 +4,14 @@ Integração nativa para o **AirControlBase / CCM21** (gateway centralizado de a
 
 ## Recursos
 
-- **Climate** por AC — on/off, modos (cool, heat, auto, dry, fan_only), velocidade do vento (low/mid/high/auto), temperatura alvo (17–30 °C), temperatura atual.
-- **Sensores de resumo** — contagem de ACs em cada modo (cool/heat/fan/stop/lock/error), total de ACs.
+- **Climate** por AC — on/off, modos (cool, heat, auto, dry, fan_only), velocidade do vento (low/mid/high/auto, com tradução de "mid"→"Médio"), temperatura alvo (17–30 °C), temperatura atual.
+- **Sensores de resumo** — ACs em cada modo (cool/heat/fan/stop/lock/error), total.
+- **Sensores de histórico** — Último evento por AC, eventos de operação e erros recentes (poll 5 min).
 - **Switches de lock** por AC — bloquear controle remoto, modo, modo cool, modo heat, ventilação.
-- **Serviços** — `aircontrolbase.create_schedule`, `aircontrolbase.update_schedule`, `aircontrolbase.refresh`.
+- **Serviços** — `create_schedule`, `update_schedule`, `refresh`, `refresh_logs`, `get_control_log` (com response).
 - **Auto re-login** — detecta `code: 40018` e refaz sessão automaticamente.
-- **Polling** — 20 s.
+- **Polling** — 20 s (estado) e 5 min (logs).
+- **i18n** — interface e nomes de entidades em pt-BR e en.
 
 ## Instalação
 
