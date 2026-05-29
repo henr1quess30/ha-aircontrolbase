@@ -93,6 +93,14 @@ custom_components/aircontrolbase/
     └── pt-BR.json
 ```
 
+## Dashboard de exemplo
+
+O arquivo [`examples/dashboard.yaml`](examples/dashboard.yaml) traz uma view pronta com seções "Grupos" (climates de área), sub-áreas internas e resumo. Como aplicar:
+
+1. No HA: ⋮ no canto superior direito do dashboard → **Editar dashboard** → ⋮ → **Editor de configuração bruta**
+2. Cole o conteúdo (substituindo ou como nova view)
+3. Ajuste os `entity_id` se forem diferentes do seu setup
+
 ## Licença
 
 MIT — veja `LICENSE`.

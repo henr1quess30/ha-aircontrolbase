@@ -1,0 +1,122 @@
+title: Ar-condicionado
+path: ar
+icon: mdi:air-conditioner
+type: sections
+max_columns: 4
+sections:
+  - type: grid
+    cards:
+      - type: heading
+        heading: Grupos
+        heading_style: title
+        icon: mdi:group
+      - type: tile
+        entity: climate.ar_teto
+        features_position: bottom
+        vertical: false
+        features:
+          - type: climate-hvac-modes
+            hvac_modes: ["off", "cool", "heat", "dry", "fan_only", "auto"]
+          - type: target-temperature
+          - type: climate-fan-modes
+            fan_modes: ["off", "low", "mid", "high", "auto"]
+            style: dropdown
+      - type: tile
+        entity: climate.ar_parede
+        features_position: bottom
+        features:
+          - type: climate-hvac-modes
+            hvac_modes: ["off", "cool", "heat", "dry", "fan_only", "auto"]
+          - type: target-temperature
+          - type: climate-fan-modes
+            fan_modes: ["off", "low", "mid", "high", "auto"]
+            style: dropdown
+
+  - type: grid
+    cards:
+      - type: heading
+        heading: Suporte
+        icon: mdi:tools
+      - type: tile
+        entity: climate.sala_suporte_2
+        features:
+          - type: climate-hvac-modes
+            hvac_modes: ["off", "cool", "heat", "dry", "fan_only", "auto"]
+          - type: target-temperature
+      - type: tile
+        entity: climate.corredor_suporte_2
+        features:
+          - type: climate-hvac-modes
+            hvac_modes: ["off", "cool", "heat", "dry", "fan_only", "auto"]
+          - type: target-temperature
+
+  - type: grid
+    cards:
+      - type: heading
+        heading: Loja Miudinhos
+        icon: mdi:store
+      - type: tile
+        entity: climate.loja_miudinhos_2
+        features:
+          - type: climate-hvac-modes
+            hvac_modes: ["off", "cool", "heat", "dry", "fan_only", "auto"]
+          - type: target-temperature
+      - type: tile
+        entity: climate.ar_meio_loja_miudinhos_2
+        features:
+          - type: climate-hvac-modes
+            hvac_modes: ["off", "cool", "heat", "dry", "fan_only", "auto"]
+          - type: target-temperature
+      - type: tile
+        entity: climate.ar_esquerda_loja_miudinhos_2
+        features:
+          - type: climate-hvac-modes
+            hvac_modes: ["off", "cool", "heat", "dry", "fan_only", "auto"]
+          - type: target-temperature
+      - type: tile
+        entity: climate.ar_direita_loja_miudinhos_2
+        features:
+          - type: climate-hvac-modes
+            hvac_modes: ["off", "cool", "heat", "dry", "fan_only", "auto"]
+          - type: target-temperature
+
+  - type: grid
+    cards:
+      - type: heading
+        heading: Loja Cascata
+        icon: mdi:store-outline
+      - type: tile
+        entity: climate.ar_entrada_loja_cascata_2
+        features:
+          - type: climate-hvac-modes
+            hvac_modes: ["off", "cool", "heat", "dry", "fan_only", "auto"]
+          - type: target-temperature
+      - type: tile
+        entity: climate.ar_caixa_loja_cascata_2
+        features:
+          - type: climate-hvac-modes
+            hvac_modes: ["off", "cool", "heat", "dry", "fan_only", "auto"]
+          - type: target-temperature
+
+  - type: grid
+    cards:
+      - type: heading
+        heading: Resumo
+        icon: mdi:chart-box
+      - type: tile
+        entity: sensor.acs_resfriando
+        color: blue
+      - type: tile
+        entity: sensor.acs_aquecendo
+        color: red
+      - type: tile
+        entity: sensor.acs_desligados
+        color: grey
+      - type: tile
+        entity: sensor.total_de_acs
+      - type: tile
+        entity: sensor.acs_bloqueados
+        color: amber
+      - type: tile
+        entity: sensor.acs_com_erro
+        color: red
