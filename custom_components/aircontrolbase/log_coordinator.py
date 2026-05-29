@@ -88,25 +88,34 @@ class AirControlBaseLogCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.client = client
 
     async def _async_update_data(self) -> dict[str, Any]:
-        ops_raw: Any = {}
-        err_raw: Any = {}
+        ops_raw: Any = None
+        err_raw: Any = None
+        ops_err: Exception | None = None
+        err_err: Exception | None = None
+
         try:
             ops_raw = await self.client.get_device_log(log_type="r", page=1, page_size=LOG_PAGE_SIZE)
-        except AirControlBaseError as err:
-            _LOGGER.warning("deviceLog type=r falhou: %s", err)
+        except Exception as err:  # noqa: BLE001
+            ops_err = err
+            _LOGGER.warning("deviceLog type=r falhou: %s: %s", type(err).__name__, err)
+
         try:
             err_raw = await self.client.get_device_log(log_type="m", page=1, page_size=LOG_PAGE_SIZE)
-        except AirControlBaseError as err:
-            _LOGGER.warning("deviceLog type=m falhou: %s", err)
+        except Exception as err:  # noqa: BLE001
+            err_err = err
+            _LOGGER.warning("deviceLog type=m falhou: %s: %s", type(err).__name__, err)
 
-        if not ops_raw and not err_raw:
-            raise UpdateFailed("Ambos os endpoints de deviceLog falharam")
+        if ops_raw is None and err_raw is None:
+            raise UpdateFailed(
+                f"deviceLog falhou — r={type(ops_err).__name__}: {ops_err}; "
+                f"m={type(err_err).__name__}: {err_err}"
+            )
 
         _LOGGER.debug("deviceLog type=r raw: %s", ops_raw)
         _LOGGER.debug("deviceLog type=m raw: %s", err_raw)
 
-        ops = _extract_records(ops_raw)
-        errors = _extract_records(err_raw)
+        ops = _extract_records(ops_raw) if ops_raw is not None else []
+        errors = _extract_records(err_raw) if err_raw is not None else []
 
         # agrupa últimos eventos por device (op record mais recente vence — assumindo
         # que a API retorna por ordem decrescente; senão é só "algum recente")
