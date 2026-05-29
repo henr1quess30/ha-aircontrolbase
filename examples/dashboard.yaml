@@ -108,18 +108,24 @@ views:
           # antiga. Em instalações novas pode ser apenas sensor.acs_resfriando etc.
           - type: tile
             entity: sensor.aircontrolbase_acs_em_modo_cool
+            name: Resfriando
             color: blue
           - type: tile
             entity: sensor.aircontrolbase_acs_em_modo_heat
+            name: Aquecendo
             color: red
           - type: tile
             entity: sensor.aircontrolbase_acs_desligados
+            name: Desligados
             color: grey
           - type: tile
             entity: sensor.aircontrolbase_total_de_acs
+            name: Total
           - type: tile
             entity: sensor.aircontrolbase_acs_travados
+            name: Travados
             color: amber
           - type: tile
             entity: sensor.aircontrolbase_acs_com_erro
+            name: Com erro
             color: red
