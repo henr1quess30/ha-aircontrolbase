@@ -26,6 +26,17 @@
       "already_configured": "Esta conta já está configurada."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Climate de grupo por área",
+        "description": "Selecione quais áreas do AirControlBase devem expor um climate único que controla todos os ACs da área juntos. Deixe em branco para não criar nenhum grupo.",
+        "data": {
+          "group_areas": "Áreas com climate de grupo"
+        }
+      }
+    }
+  },
   "entity": {
     "climate": {
       "ac": {

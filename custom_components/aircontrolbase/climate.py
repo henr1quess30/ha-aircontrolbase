@@ -24,6 +24,7 @@ from .const import (
     HA_TO_ACB_MODE,
     MAX_TEMP,
     MIN_TEMP,
+    OPT_GROUP_AREAS,
     TEMP_STEP,
 )
 from .coordinator import AirControlBaseCoordinator
@@ -40,6 +41,12 @@ HVAC_MODES = [
 ]
 
 
+def _default_group_areas(coordinator: AirControlBaseCoordinator) -> list[str]:
+    """Padrão: todas as áreas com mais de 1 device."""
+    data = coordinator.data or {}
+    return [a["name"] for a in data.get("areas", []) if len(a.get("device_ids", [])) > 1]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -49,16 +56,37 @@ async def async_setup_entry(
     coordinator: AirControlBaseCoordinator = bucket["coordinator"]
     client: AirControlBaseClient = bucket["client"]
 
-    known: set[str] = set()
+    known_devices: set[str] = set()
+    known_groups: set[str] = set()
+
+    def _selected_group_areas() -> list[str]:
+        opts = entry.options.get(OPT_GROUP_AREAS)
+        if opts is None:
+            return _default_group_areas(coordinator)
+        return list(opts)
 
     @callback
     def _discover() -> None:
-        new = []
+        new: list[ClimateEntity] = []
+        # devices individuais
         for dev_id in coordinator.data.get("devices", {}):
-            if dev_id in known:
+            if dev_id in known_devices:
                 continue
-            known.add(dev_id)
+            known_devices.add(dev_id)
             new.append(AirControlBaseClimate(coordinator, client, dev_id))
+        # grupos por área
+        selected = set(_selected_group_areas())
+        for area in coordinator.data.get("areas", []):
+            name = area.get("name") or ""
+            if not name or name in known_groups or name not in selected:
+                continue
+            device_ids = area.get("device_ids") or []
+            if len(device_ids) < 2:
+                continue
+            known_groups.add(name)
+            new.append(
+                AirControlBaseGroupClimate(coordinator, client, entry.entry_id, name)
+            )
         if new:
             async_add_entities(new)
 
@@ -178,6 +206,166 @@ class AirControlBaseClimate(CoordinatorEntity[AirControlBaseCoordinator], Climat
             changes={"setTemp": int(temp)},
         )
         await self.coordinator.async_request_refresh()
+
+    async def async_turn_on(self) -> None:
+        await self.async_set_hvac_mode(HVACMode.COOL)
+
+    async def async_turn_off(self) -> None:
+        await self.async_set_hvac_mode(HVACMode.OFF)
+
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Climate de grupo (agrega N ACs de uma área AirControlBase)
+# ────────────────────────────────────────────────────────────────────────────────
+
+
+def _slugify(s: str) -> str:
+    return "".join(c if c.isalnum() else "_" for c in s.lower()).strip("_")
+
+
+class AirControlBaseGroupClimate(
+    CoordinatorEntity[AirControlBaseCoordinator], ClimateEntity
+):
+    """Climate agregado por área (Ar Teto, Ar Parede, ...)."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_translation_key = "ac"
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_hvac_modes = HVAC_MODES
+    _attr_fan_modes = HA_FAN_MODES
+    _attr_min_temp = MIN_TEMP
+    _attr_max_temp = MAX_TEMP
+    _attr_target_temperature_step = TEMP_STEP
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+    )
+
+    def __init__(
+        self,
+        coordinator: AirControlBaseCoordinator,
+        client: AirControlBaseClient,
+        entry_id: str,
+        area_name: str,
+    ) -> None:
+        super().__init__(coordinator)
+        self._client = client
+        self._area_name = area_name
+        self._slug = _slugify(area_name)
+        self._attr_unique_id = f"{DOMAIN}_group_{entry_id}_{self._slug}"
+
+    @property
+    def _members(self) -> list[dict[str, Any]]:
+        data = self.coordinator.data or {}
+        devices = data.get("devices", {})
+        member_ids: list[str] = []
+        for area in data.get("areas", []):
+            if area.get("name") == self._area_name:
+                member_ids = area.get("device_ids") or []
+                break
+        return [devices[mid] for mid in member_ids if mid in devices]
+
+    @property
+    def _on_members(self) -> list[dict[str, Any]]:
+        return [m for m in self._members if m.get("power") == "y"]
+
+    @property
+    def available(self) -> bool:
+        return bool(self._members) and super().available
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"group_{self._slug}")},
+            name=self._area_name,
+            manufacturer="AirControlBase",
+            model="Grupo (área)",
+            suggested_area=self._area_name,
+        )
+
+    # ── estado agregado ───────────────────────────────────────────────────────
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        on = self._on_members
+        if not on:
+            return HVACMode.OFF
+        # se todos no mesmo modo → esse modo; senão → o do primeiro
+        modes = {m.get("mode", "cool") for m in on}
+        first = list(modes)[0] if len(modes) == 1 else on[0].get("mode", "cool")
+        return HVACMode(ACB_TO_HA_MODE.get(first, "cool"))
+
+    @property
+    def fan_mode(self) -> str | None:
+        on = self._on_members
+        if not on:
+            return "auto"
+        winds = {m.get("wind") or "auto" for m in on}
+        if len(winds) == 1:
+            w = next(iter(winds))
+        else:
+            w = on[0].get("wind") or "auto"
+        return w if w in HA_FAN_MODES else "auto"
+
+    @property
+    def current_temperature(self) -> float | None:
+        temps = [m.get("factTemp") for m in self._members if m.get("factTemp")]
+        if not temps:
+            return None
+        return round(sum(temps) / len(temps), 1)
+
+    @property
+    def target_temperature(self) -> float | None:
+        on = self._on_members
+        if not on:
+            # mostra alguma referência mesmo desligado
+            temps = [m.get("setTemp") for m in self._members if m.get("setTemp") is not None]
+        else:
+            temps = [m.get("setTemp") for m in on if m.get("setTemp") is not None]
+        if not temps:
+            return None
+        # se todos iguais → esse valor; senão → média arredondada
+        if len(set(temps)) == 1:
+            return float(temps[0])
+        return float(round(sum(temps) / len(temps)))
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {
+            "members": [m.get("id") for m in self._members],
+            "members_on": [m.get("id") for m in self._on_members],
+        }
+
+    # ── comandos: aplicam em todos os membros ─────────────────────────────────
+
+    async def _apply_to_all(self, changes: dict[str, Any]) -> None:
+        for m in self._members:
+            await self._client.control_device(
+                device_id=m["id"], current=m, changes=changes
+            )
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        if hvac_mode == HVACMode.OFF:
+            changes = {"power": "n"}
+        else:
+            changes = {
+                "power": "y",
+                "mode": HA_TO_ACB_MODE.get(hvac_mode.value, "cool"),
+            }
+        await self._apply_to_all(changes)
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        await self._apply_to_all({"wind": fan_mode})
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        temp = kwargs.get(ATTR_TEMPERATURE)
+        if temp is None:
+            return
+        await self._apply_to_all({"setTemp": int(temp)})
 
     async def async_turn_on(self) -> None:
         await self.async_set_hvac_mode(HVACMode.COOL)

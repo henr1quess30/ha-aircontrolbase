@@ -44,3 +44,6 @@ TEMP_STEP = 1
 CONF_ACCOUNT  = "account"
 CONF_PASSWORD = "password"
 CONF_USER_ID  = "user_id"
+
+# Options keys
+OPT_GROUP_AREAS = "group_areas"  # lista de nomes de áreas que terão climate de grupo
