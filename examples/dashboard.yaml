@@ -104,20 +104,22 @@ views:
           - type: heading
             heading: Resumo
             icon: mdi:chart-box
+          # Nota: o prefixo aircontrolbase_ aparece em instalações com translation_key
+          # antiga. Em instalações novas pode ser apenas sensor.acs_resfriando etc.
           - type: tile
-            entity: sensor.acs_resfriando
+            entity: sensor.aircontrolbase_acs_em_modo_cool
             color: blue
           - type: tile
-            entity: sensor.acs_aquecendo
+            entity: sensor.aircontrolbase_acs_em_modo_heat
             color: red
           - type: tile
-            entity: sensor.acs_desligados
+            entity: sensor.aircontrolbase_acs_desligados
             color: grey
           - type: tile
-            entity: sensor.total_de_acs
+            entity: sensor.aircontrolbase_total_de_acs
           - type: tile
-            entity: sensor.acs_bloqueados
+            entity: sensor.aircontrolbase_acs_travados
             color: amber
           - type: tile
-            entity: sensor.acs_com_erro
+            entity: sensor.aircontrolbase_acs_com_erro
             color: red
