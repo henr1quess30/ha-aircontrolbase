@@ -99,16 +99,28 @@ class AirControlBaseClient:
 
         if not isinstance(payload, dict):
             raise AuthError(f"Login resposta inesperada: {payload!r}")
-        if payload.get("code") and payload.get("code") not in (0, 200):
-            raise AuthError(f"Login falhou: code={payload.get('code')} msg={payload.get('msg')}")
+
+        _LOGGER.debug("Login raw payload: %s", payload)
+
+        code = payload.get("code")
+        if code is not None and str(code) not in ("0", "200"):
+            raise AuthError(
+                f"Login falhou: code={code} msg={payload.get('msg') or payload.get('message')}"
+            )
 
         # tenta achar o userId na resposta — caminhos comuns
+        result = payload.get("result") if isinstance(payload.get("result"), dict) else {}
+        data_field = payload.get("data") if isinstance(payload.get("data"), dict) else {}
         extracted = (
             payload.get("userId")
-            or (payload.get("result") or {}).get("userId")
-            or (payload.get("result") or {}).get("id")
-            or (payload.get("data") or {}).get("userId")
-            or (payload.get("data") or {}).get("id")
+            or payload.get("uid")
+            or payload.get("user_id")
+            or result.get("userId")
+            or result.get("uid")
+            or result.get("id")
+            or data_field.get("userId")
+            or data_field.get("uid")
+            or data_field.get("id")
         )
         if extracted:
             self._user_id = str(extracted)

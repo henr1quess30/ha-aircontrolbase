@@ -1,6 +1,7 @@
 """Config flow do AirControlBase."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -9,6 +10,8 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .api import AirControlBaseClient, AuthError
 from .const import CONF_ACCOUNT, CONF_PASSWORD, CONF_USER_ID, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_SCHEMA = vol.Schema(
     {
@@ -43,11 +46,13 @@ class AirControlBaseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await client.login()
             except AuthError as err:
                 msg = str(err).lower()
+                _LOGGER.warning("AirControlBase login falhou: %s", err)
                 if "userid não encontrado" in msg or "userid nao encontrado" in msg:
                     await client.close()
                     return await self.async_step_userid()
                 errors["base"] = "invalid_auth"
-            except Exception:  # noqa: BLE001
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.exception("Erro inesperado conectando ao AirControlBase: %s", err)
                 errors["base"] = "cannot_connect"
             else:
                 user_id = client.user_id
