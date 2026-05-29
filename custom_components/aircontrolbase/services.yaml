@@ -1,0 +1,152 @@
+create_schedule:
+  name: Criar agendamento
+  description: Cria um agendamento (booking) no AirControlBase para um ou mais ACs.
+  fields:
+    device_ids:
+      name: Devices
+      description: IDs dos ar-condicionados (string). Aceita lista.
+      required: true
+      example: ["40783271", "40783272"]
+      selector:
+        text:
+          multiple: true
+    timer:
+      name: Horário
+      description: Horário em HH:MM (24h).
+      required: true
+      example: "08:30"
+      selector:
+        text:
+    mode:
+      name: Modo
+      description: Modo do AC no agendamento.
+      required: true
+      default: cool
+      selector:
+        select:
+          options:
+            - cool
+            - heat
+            - auto
+            - dry
+            - fan_only
+            - off
+    temperature:
+      name: Temperatura
+      description: Temperatura alvo em °C.
+      required: false
+      default: 24
+      example: 22
+      selector:
+        number:
+          min: 17
+          max: 30
+          step: 1
+          unit_of_measurement: "°C"
+    fan_mode:
+      name: Ventilação
+      description: Velocidade do ventilador.
+      required: false
+      default: auto
+      selector:
+        select:
+          options:
+            - low
+            - mid
+            - high
+            - auto
+    weeks:
+      name: Dias da semana
+      description: Lista de dias (1=segunda ... 7=domingo). Vazio = todos os dias.
+      required: false
+      example: [1, 2, 3, 4, 5]
+      selector:
+        select:
+          multiple: true
+          options:
+            - { label: "Segunda", value: "1" }
+            - { label: "Terça",   value: "2" }
+            - { label: "Quarta",  value: "3" }
+            - { label: "Quinta",  value: "4" }
+            - { label: "Sexta",   value: "5" }
+            - { label: "Sábado",  value: "6" }
+            - { label: "Domingo", value: "7" }
+    cycle:
+      name: Cíclico
+      description: Repete semanalmente.
+      required: false
+      default: true
+      selector:
+        boolean:
+
+update_schedule:
+  name: Atualizar agendamento
+  description: Atualiza um agendamento existente no AirControlBase (precisa do sid).
+  fields:
+    schedule_id:
+      name: Schedule ID (sid)
+      description: ID do agendamento existente (do schedule/getAll).
+      required: true
+      example: "69879"
+      selector:
+        text:
+    device_ids:
+      name: Devices
+      description: IDs dos ar-condicionados.
+      required: true
+      selector:
+        text:
+          multiple: true
+    timer:
+      name: Horário
+      required: true
+      selector:
+        text:
+    mode:
+      name: Modo
+      required: true
+      default: cool
+      selector:
+        select:
+          options: [cool, heat, auto, dry, fan_only, off]
+    temperature:
+      name: Temperatura
+      required: false
+      default: 24
+      selector:
+        number:
+          min: 17
+          max: 30
+          step: 1
+          unit_of_measurement: "°C"
+    fan_mode:
+      name: Ventilação
+      required: false
+      default: auto
+      selector:
+        select:
+          options: [low, mid, high, auto]
+    weeks:
+      name: Dias da semana
+      required: false
+      selector:
+        select:
+          multiple: true
+          options:
+            - { label: "Segunda", value: "1" }
+            - { label: "Terça",   value: "2" }
+            - { label: "Quarta",  value: "3" }
+            - { label: "Quinta",  value: "4" }
+            - { label: "Sexta",   value: "5" }
+            - { label: "Sábado",  value: "6" }
+            - { label: "Domingo", value: "7" }
+    cycle:
+      name: Cíclico
+      required: false
+      default: true
+      selector:
+        boolean:
+
+refresh:
+  name: Refresh
+  description: Força um poll imediato do estado dos ACs.

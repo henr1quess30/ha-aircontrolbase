@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "AirControlBase login",
+        "description": "Enter your AirControlBase (CCM21) account credentials.",
+        "data": {
+          "account": "Email / account",
+          "password": "Password"
+        }
+      },
+      "userid": {
+        "title": "userId not auto-detected",
+        "description": "Login OK for {account}, but the userId could not be extracted from the response. Paste it manually (find it in DevTools → Network on aircontrolbase.com, any request shows `userId=...` in the form data).",
+        "data": {
+          "user_id": "userId"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid email or password.",
+      "invalid_user_id": "userId rejected by the API.",
+      "cannot_connect": "Could not reach AirControlBase."
+    },
+    "abort": {
+      "already_configured": "This account is already configured."
+    }
+  }
+}

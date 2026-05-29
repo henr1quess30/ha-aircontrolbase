@@ -1,0 +1,13 @@
+{
+  "domain": "aircontrolbase",
+  "name": "AirControlBase (CCM21)",
+  "version": "0.1.0",
+  "documentation": "https://github.com/henr1quess30/ha-aircontrolbase",
+  "issue_tracker": "https://github.com/henr1quess30/ha-aircontrolbase/issues",
+  "codeowners": ["@henr1quess30"],
+  "config_flow": true,
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "dependencies": []
+}

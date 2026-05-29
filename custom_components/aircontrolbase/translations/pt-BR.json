@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Login AirControlBase",
+        "description": "Informe as credenciais da sua conta AirControlBase (CCM21).",
+        "data": {
+          "account": "E-mail / conta",
+          "password": "Senha"
+        }
+      },
+      "userid": {
+        "title": "userId não detectado automaticamente",
+        "description": "Login OK para {account}, mas o userId não veio na resposta. Cole manualmente (no aircontrolbase.com abra DevTools → Network, qualquer requisição mostra `userId=...` no form data).",
+        "data": {
+          "user_id": "userId"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "E-mail ou senha inválidos.",
+      "invalid_user_id": "userId rejeitado pela API.",
+      "cannot_connect": "Não foi possível conectar ao AirControlBase."
+    },
+    "abort": {
+      "already_configured": "Esta conta já está configurada."
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "AirControlBase (CCM21)",
+  "render_readme": true,
+  "homeassistant": "2024.10.0",
+  "content_in_root": false
+}
