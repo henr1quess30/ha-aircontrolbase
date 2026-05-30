@@ -1,7 +1,7 @@
 {
   "domain": "aircontrolbase",
   "name": "AirControlBase (CCM21)",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "documentation": "https://github.com/henr1quess30/ha-aircontrolbase",
   "issue_tracker": "https://github.com/henr1quess30/ha-aircontrolbase/issues",
   "codeowners": ["@henr1quess30"],

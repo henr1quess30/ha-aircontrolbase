@@ -1,8 +1,15 @@
 """Plataforma climate do AirControlBase."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
+
+# CCM21 não lida bem com rajadas de comandos no mesmo bus serial.
+# Esperar antes de mandar o próximo membro evita que comandos sejam descartados.
+_MEMBER_COMMAND_DELAY = 0.8
+# Tempo pro estado propagar de volta antes de pedir refresh ao coordinator.
+_POST_APPLY_REFRESH_DELAY = 2.0
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -354,7 +361,9 @@ class AirControlBaseGroupClimate(
             len(members),
             [m.get("id") for m in members],
         )
-        for m in members:
+        for idx, m in enumerate(members):
+            if idx > 0:
+                await asyncio.sleep(_MEMBER_COMMAND_DELAY)
             try:
                 resp = await self._client.control_device(
                     device_id=m["id"], current=m, changes=changes
@@ -366,6 +375,7 @@ class AirControlBaseGroupClimate(
                 _LOGGER.exception(
                     "Grupo %s: falha no device %s: %s", self._area_name, m.get("id"), err
                 )
+        await asyncio.sleep(_POST_APPLY_REFRESH_DELAY)
         await self.coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -376,7 +386,9 @@ class AirControlBaseGroupClimate(
         # ligando: por membro, força wind=auto se atual era off
         acb_mode = HA_TO_ACB_MODE.get(hvac_mode.value, "cool")
         members = self._members
-        for m in members:
+        for idx, m in enumerate(members):
+            if idx > 0:
+                await asyncio.sleep(_MEMBER_COMMAND_DELAY)
             changes: dict[str, Any] = {"power": "y", "mode": acb_mode}
             if (m.get("wind") in (None, "", "off")):
                 changes["wind"] = "auto"
@@ -393,6 +405,7 @@ class AirControlBaseGroupClimate(
                     "Grupo %s: falha turn_on no device %s: %s",
                     self._area_name, m.get("id"), err,
                 )
+        await asyncio.sleep(_POST_APPLY_REFRESH_DELAY)
         await self.coordinator.async_request_refresh()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
