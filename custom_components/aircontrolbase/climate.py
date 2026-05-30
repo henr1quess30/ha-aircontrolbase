@@ -183,6 +183,8 @@ class AirControlBaseClimate(CoordinatorEntity[AirControlBaseCoordinator], Climat
                 "power": "y",
                 "mode": HA_TO_ACB_MODE.get(hvac_mode.value, "cool"),
             }
+            if d.get("wind") in (None, "", "off"):
+                changes["wind"] = "auto"
         await self._client.control_device(device_id=self._device_id, current=d, changes=changes)
         await self.coordinator.async_request_refresh()
 
@@ -208,9 +210,11 @@ class AirControlBaseClimate(CoordinatorEntity[AirControlBaseCoordinator], Climat
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self) -> None:
+        _LOGGER.info("Device %s: turn_on", self._device_id)
         await self.async_set_hvac_mode(HVACMode.COOL)
 
     async def async_turn_off(self) -> None:
+        _LOGGER.info("Device %s: turn_off", self._device_id)
         await self.async_set_hvac_mode(HVACMode.OFF)
 
 
@@ -342,33 +346,70 @@ class AirControlBaseGroupClimate(
     # ── comandos: aplicam em todos os membros ─────────────────────────────────
 
     async def _apply_to_all(self, changes: dict[str, Any]) -> None:
-        for m in self._members:
-            await self._client.control_device(
-                device_id=m["id"], current=m, changes=changes
-            )
+        members = self._members
+        _LOGGER.info(
+            "Grupo %s: aplicando %s em %d membros (%s)",
+            self._area_name,
+            changes,
+            len(members),
+            [m.get("id") for m in members],
+        )
+        for m in members:
+            try:
+                resp = await self._client.control_device(
+                    device_id=m["id"], current=m, changes=changes
+                )
+                _LOGGER.info(
+                    "Grupo %s: device %s resposta %s", self._area_name, m.get("id"), resp
+                )
+            except Exception as err:
+                _LOGGER.exception(
+                    "Grupo %s: falha no device %s: %s", self._area_name, m.get("id"), err
+                )
         await self.coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        _LOGGER.info("Grupo %s: set_hvac_mode(%s)", self._area_name, hvac_mode)
         if hvac_mode == HVACMode.OFF:
-            changes = {"power": "n"}
-        else:
-            changes = {
-                "power": "y",
-                "mode": HA_TO_ACB_MODE.get(hvac_mode.value, "cool"),
-            }
-        await self._apply_to_all(changes)
+            await self._apply_to_all({"power": "n"})
+            return
+        # ligando: por membro, força wind=auto se atual era off
+        acb_mode = HA_TO_ACB_MODE.get(hvac_mode.value, "cool")
+        members = self._members
+        for m in members:
+            changes: dict[str, Any] = {"power": "y", "mode": acb_mode}
+            if (m.get("wind") in (None, "", "off")):
+                changes["wind"] = "auto"
+            try:
+                resp = await self._client.control_device(
+                    device_id=m["id"], current=m, changes=changes
+                )
+                _LOGGER.info(
+                    "Grupo %s: device %s (turn_on) resposta %s",
+                    self._area_name, m.get("id"), resp,
+                )
+            except Exception as err:
+                _LOGGER.exception(
+                    "Grupo %s: falha turn_on no device %s: %s",
+                    self._area_name, m.get("id"), err,
+                )
+        await self.coordinator.async_request_refresh()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
+        _LOGGER.info("Grupo %s: set_fan_mode(%s)", self._area_name, fan_mode)
         await self._apply_to_all({"wind": fan_mode})
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is None:
             return
+        _LOGGER.info("Grupo %s: set_temperature(%s)", self._area_name, temp)
         await self._apply_to_all({"setTemp": int(temp)})
 
     async def async_turn_on(self) -> None:
+        _LOGGER.info("Grupo %s: turn_on", self._area_name)
         await self.async_set_hvac_mode(HVACMode.COOL)
 
     async def async_turn_off(self) -> None:
+        _LOGGER.info("Grupo %s: turn_off", self._area_name)
         await self.async_set_hvac_mode(HVACMode.OFF)
